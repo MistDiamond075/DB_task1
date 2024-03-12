@@ -17,10 +17,19 @@ public class repStuff implements Repository<Stuff>{
         stmt=dbconn.getStatement();
     }
     @Override
-    public void rAdd(Stuff stuff) {
+      public Integer rAdd(Stuff stuff) {
+        int ret_id=0;
         sql_request="insert into stuff values("+stuff.getId()+", "+stuff.getFullname()+", "+stuff.getProfession()+");";
         try {stmt.executeUpdate(sql_request);stmt.close();} catch (SQLException e) {throw new RuntimeException(e);}
         sql_request="";
+        ResultSet rs= null;
+        try {
+            rs = stmt.executeQuery("select max(id) from stuff");
+            rs.next();
+            ret_id=rs.getInt("max(id)");
+        }
+        catch (SQLException e) {throw new RuntimeException(e);}
+        return ret_id;
     }
 
     @Override
