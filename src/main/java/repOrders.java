@@ -18,10 +18,19 @@ public class repOrders implements Repository<Orders>{
     }
     
     @Override
-    public void rAdd(Orders orders) {
+      public Integer rAdd(Orders orders) {
+      int ret_id=0;
         sql_request="insert into orders values("+orders.getId()+", "+orders.isGarant()+", "+orders.getDate()+", "+orders.getPhone()+", "+orders.getTovar_id().getId()+", "+orders.getClient_name()+");";
         try {stmt.executeUpdate(sql_request);stmt.close();} catch (SQLException e) {throw new RuntimeException(e);}
         sql_request="";
+        ResultSet rs= null;
+        try {
+            rs = stmt.executeQuery("select max(id) from orders");
+        rs.next();
+        ret_id=rs.getInt("max(id)");
+        }
+        catch (SQLException e) {throw new RuntimeException(e);}
+        return ret_id;
     }
 
     @Override
