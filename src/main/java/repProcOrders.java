@@ -18,11 +18,20 @@ public class repProcOrders implements Repository<Processing_orders>{
    }
     
     @Override
-    public void rAdd(Processing_orders prorders) {
+      public Integer rAdd(Processing_orders prorders) {
+        int ret_id=0;
         sql_request="insert into processing_prorders values("+prorders.getId()+", "+prorders.getRepair_type()+", "+prorders.getCost()+", "+prorders.getRepair_date()+", "+prorders.isClient_msg()+", "+prorders.getGet_tovar_date()+", "+prorders.getPayment()
                 +", "+prorders.getOrders_id()+", "+prorders.getOrders_tovar_id()+", "+prorders.getStuff_id()+");";
         try {stmt.executeUpdate(sql_request);stmt.close();} catch (SQLException e) {throw new RuntimeException(e);}
         sql_request="";
+        ResultSet rs= null;
+        try {
+            rs = stmt.executeQuery("select max(id) from processing_orders");
+            rs.next();
+            ret_id=rs.getInt("max(id)");
+        }
+        catch (SQLException e) {throw new RuntimeException(e);}
+        return ret_id;
     }
 
     @Override
