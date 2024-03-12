@@ -17,10 +17,19 @@ public repTovar(){
     stmt=dbconn.getStatement();
 }
     @Override
-    public void rAdd(Tovar tovar) {
+    public Integer rAdd(Tovar tovar) {
+        int ret_id=0;
         sql_request="insert into tovar values("+tovar.getId()+", "+tovar.getName()+", "+tovar.getFirm_name()+", "+tovar.getModel()+", "+tovar.getProperties()+", "+tovar.getGarant()+", "+tovar.isImage()+");";
         try {stmt.executeUpdate(sql_request);stmt.close();} catch (SQLException e) {throw new RuntimeException(e);}
         sql_request="";
+        ResultSet rs= null;
+        try {
+            rs = stmt.executeQuery("select max(id) from tovar");
+            rs.next();
+            ret_id=rs.getInt("max(id)");
+        }
+        catch (SQLException e) {throw new RuntimeException(e);}
+        return ret_id;
 }
 
     @Override
