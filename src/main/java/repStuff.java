@@ -1,3 +1,4 @@
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -17,18 +18,25 @@ public class repStuff implements Repository<Stuff>{
         stmt=dbconn.getStatement();
     }
     @Override
-      public Integer rAdd(Stuff stuff) {
+    public Integer rAdd(Stuff stuff) {
         int ret_id=0;
-        sql_request="insert into stuff values("+stuff.getId()+", "+stuff.getFullname()+", "+stuff.getProfession()+");";
-        try {stmt.executeUpdate(sql_request);stmt.close();} catch (SQLException e) {throw new RuntimeException(e);}
-        sql_request="";
-        ResultSet rs= null;
+        sql_request="insert into stuff (id, fullname,profession) values (?,?,?);";
+        PreparedStatement stmtup= null;
         try {
-            rs = stmt.executeQuery("select max(id) from stuff");
-            rs.next();
-            ret_id=rs.getInt("max(id)");
+            stmtup = dbconn.getConn().prepareStatement(sql_request, Statement.RETURN_GENERATED_KEYS);{
+                stmtup.setInt(1,stuff.getId());
+                stmtup.setString(2,stuff.getFullname());
+                stmtup.setString(3,stuff.getProfession());
+                stmtup.executeUpdate();
+                ResultSet generatedKeys=stmtup.getGeneratedKeys();
+                if(generatedKeys.next()){
+                    stuff.setId(generatedKeys.getInt(1));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
-        catch (SQLException e) {throw new RuntimeException(e);}
+        ret_id=stuff.getId();
         return ret_id;
     }
 
