@@ -1,6 +1,4 @@
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.LinkedList;
 
 public class repTovar implements Repository<Tovar>{
@@ -19,16 +17,27 @@ public repTovar(){
     @Override
     public Integer rAdd(Tovar tovar) {
         int ret_id=0;
-        sql_request="insert into tovar values("+tovar.getId()+", "+tovar.getName()+", "+tovar.getFirm_name()+", "+tovar.getModel()+", "+tovar.getProperties()+", "+tovar.getGarant()+", "+tovar.isImage()+");";
-        try {stmt.executeUpdate(sql_request);stmt.close();} catch (SQLException e) {throw new RuntimeException(e);}
-        sql_request="";
-        ResultSet rs= null;
+        sql_request="insert into tovar (id, name,firm_name,model,properties,garant,image) values (?,?,?,?,?,?,?);";
+        PreparedStatement stmtup= null;
         try {
-            rs = stmt.executeQuery("select max(id) from tovar");
-            rs.next();
-            ret_id=rs.getInt("max(id)");
+            stmtup = dbconn.getConn().prepareStatement(sql_request, Statement.RETURN_GENERATED_KEYS);{
+            stmtup.setInt(1,tovar.getId());
+            stmtup.setString(2,tovar.getName());
+            stmtup.setString(3,tovar.getFirm_name());
+            stmtup.setString(4,tovar.getModel());
+            stmtup.setString(5,tovar.getProperties());
+            stmtup.setInt(6,tovar.getGarant());
+            stmtup.setBoolean(7,tovar.isImage());
+            stmtup.executeUpdate();
+            ResultSet generatedKeys=stmtup.getGeneratedKeys();
+            if(generatedKeys.next()){
+                tovar.setId(generatedKeys.getInt(1));
+            }
         }
-        catch (SQLException e) {throw new RuntimeException(e);}
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        ret_id=tovar.getId();
         return ret_id;
 }
 
