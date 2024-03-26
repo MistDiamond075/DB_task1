@@ -1,6 +1,4 @@
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.LinkedList;
 
 public class repProcOrders implements Repository<Processing_orders>{
@@ -18,19 +16,30 @@ public class repProcOrders implements Repository<Processing_orders>{
    }
     
     @Override
-      public Integer rAdd(Processing_orders prorders) {
+    public Integer rAdd(Processing_orders prorders) {
         int ret_id=0;
-        sql_request="insert into processing_prorders values("+prorders.getId()+", "+prorders.getRepair_type()+", "+prorders.getCost()+", "+prorders.getRepair_date()+", "+prorders.isClient_msg()+", "+prorders.getGet_tovar_date()+", "+prorders.getPayment()
-                +", "+prorders.getOrders_id()+", "+prorders.getOrders_tovar_id()+", "+prorders.getStuff_id()+");";
-        try {stmt.executeUpdate(sql_request);stmt.close();} catch (SQLException e) {throw new RuntimeException(e);}
-        sql_request="";
-        ResultSet rs= null;
+        sql_request="insert into prorders (id, repair_type,cost,repair_date,client_msg,payment,orders_id,orders_tovar_id,stuff_id) values (?,?,?,?,?,?,?,?,?);";
+        PreparedStatement stmtup= null;
         try {
-            rs = stmt.executeQuery("select max(id) from processing_orders");
-            rs.next();
-            ret_id=rs.getInt("max(id)");
+            stmtup = dbconn.getConn().prepareStatement(sql_request, Statement.RETURN_GENERATED_KEYS);{
+                stmtup.setInt(1,prorders.getId());
+                stmtup.setString(2,prorders.getRepair_type());
+                stmtup.setInt(3,prorders.getCost());
+                stmtup.setDate(4, Date.valueOf(prorders.getRepair_date()));
+                stmtup.setBoolean(5,prorders.isClient_msg());
+                stmtup.setInt(6,prorders.getPayment());
+                stmtup.setInt(7,prorders.getOrders_id().getId());
+                stmtup.setInt(7,prorders.getOrders_tovar_id().getId());
+                stmtup.setInt(7,prorders.getStuff_id().getId());
+                ResultSet generatedKeys=stmtup.getGeneratedKeys();
+                if(generatedKeys.next()){
+                    prorders.setId(generatedKeys.getInt(1));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
-        catch (SQLException e) {throw new RuntimeException(e);}
+        ret_id=prorders.getId();
         return ret_id;
     }
 
