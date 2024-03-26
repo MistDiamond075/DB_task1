@@ -1,6 +1,5 @@
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import javax.persistence.EntityManager;
+import java.sql.*;
 import java.util.LinkedList;
 
 public class repOrders implements Repository<Orders>{
@@ -8,7 +7,6 @@ public class repOrders implements Repository<Orders>{
     private  DB_connection dbconn;
     private String sql_request;
     private LinkedList<Orders> ordersList;
-    
   public  repOrders(){
       sql_request="";
       ordersList=new LinkedList<>();
@@ -18,18 +16,28 @@ public class repOrders implements Repository<Orders>{
     }
     
     @Override
-      public Integer rAdd(Orders orders) {
+    public Integer rAdd(Orders orders) {
       int ret_id=0;
-        sql_request="insert into orders values("+orders.getId()+", "+orders.isGarant()+", "+orders.getDate()+", "+orders.getPhone()+", "+orders.getTovar_id().getId()+", "+orders.getClient_name()+");";
-        try {stmt.executeUpdate(sql_request);stmt.close();} catch (SQLException e) {throw new RuntimeException(e);}
-        sql_request="";
-        ResultSet rs= null;
+        sql_request="insert into orders (id, garant,date,phone,tovar_id,client_name) values (?,?,?,?,?,?);";
+        PreparedStatement stmtup= null;
         try {
-            rs = stmt.executeQuery("select max(id) from orders");
-        rs.next();
-        ret_id=rs.getInt("max(id)");
+            stmtup = dbconn.getConn().prepareStatement(sql_request, Statement.RETURN_GENERATED_KEYS);{
+                stmtup.setInt(1,orders.getId());
+                stmtup.setBoolean(2,orders.isGarant());
+                stmtup.setDate(3, Date.valueOf(orders.getDate()));
+                stmtup.setInt(4,orders.getPhone());
+                stmtup.setInt(5,orders.getTovar_id().getId());
+                stmtup.setString(6,orders.getClient_name());
+                stmtup.executeUpdate();
+                ResultSet generatedKeys=stmtup.getGeneratedKeys();
+                if(generatedKeys.next()){
+                    orders.setId(generatedKeys.getInt(1));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
-        catch (SQLException e) {throw new RuntimeException(e);}
+        ret_id=orders.getId();
         return ret_id;
     }
 
